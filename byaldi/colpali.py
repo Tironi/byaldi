@@ -1,4 +1,4 @@
-import os
+zimport os
 import shutil
 import tempfile
 from importlib.metadata import version
@@ -89,18 +89,6 @@ class ColPaliModel:
                 ),
                 token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
             )
-        elif "colqwen2" in pretrained_model_name_or_path.lower():
-            self.model = ColQwen2.from_pretrained(
-                self.pretrained_model_name_or_path,
-                torch_dtype=torch.bfloat16,
-                device_map=(
-                    "cuda"
-                    if device == "cuda"
-                    or (isinstance(device, torch.device) and device.type == "cuda")
-                    else None
-                ),
-                token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
-            )
         self.model = self.model.eval()
 
         if "colpali" in pretrained_model_name_or_path.lower():
@@ -115,14 +103,6 @@ class ColPaliModel:
             self.processor = cast(
                 ColQwen2_5_Processor,
                 ColQwen2_5_Processor.from_pretrained(
-                    self.pretrained_model_name_or_path,
-                    token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
-                ),
-            )
-        elif "colqwen2" in pretrained_model_name_or_path.lower():
-            self.processor = cast(
-                ColQwen2Processor,
-                ColQwen2Processor.from_pretrained(
                     self.pretrained_model_name_or_path,
                     token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
                 ),
