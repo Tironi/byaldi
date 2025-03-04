@@ -1,4 +1,4 @@
-zimport os
+import os
 import shutil
 import tempfile
 from importlib.metadata import version
