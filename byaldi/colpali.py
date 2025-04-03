@@ -204,13 +204,14 @@ class ColPaliModel:
         verbose: int = 1,
         device: Optional[Union[str, torch.device]] = None,
         index_root: str = ".byaldi",
+        load_from_index=False,
         **kwargs,
     ):
         return cls(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             n_gpu=n_gpu,
             verbose=verbose,
-            load_from_index=False,
+            load_from_index=load_from_index,
             index_root=index_root,
             device=device,
             **kwargs,
