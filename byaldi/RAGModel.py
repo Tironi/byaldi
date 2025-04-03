@@ -44,6 +44,7 @@ class RAGMultiModalModel:
         pretrained_model_name_or_path: Union[str, Path],
         index_root: str = ".byaldi",
         device: str = "cuda",
+        load_from_index=False,
         verbose: int = 1,
     ):
         """Load a ColPali model from a pre-trained checkpoint.
@@ -60,6 +61,7 @@ class RAGMultiModalModel:
             pretrained_model_name_or_path,
             index_root=index_root,
             device=device,
+            load_from_index=load_from_index,
             verbose=verbose,
         )
         return instance
