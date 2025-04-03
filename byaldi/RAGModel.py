@@ -44,6 +44,7 @@ class RAGMultiModalModel:
         pretrained_model_name_or_path: Union[str, Path],
         index_root: str = ".byaldi",
         device: str = "cuda",
+        index_name="",
         load_from_index=False,
         verbose: int = 1,
     ):
@@ -60,6 +61,7 @@ class RAGMultiModalModel:
         instance.model = ColPaliModel.from_pretrained(
             pretrained_model_name_or_path,
             index_root=index_root,
+            index_name=index_name,
             device=device,
             load_from_index=load_from_index,
             verbose=verbose,
