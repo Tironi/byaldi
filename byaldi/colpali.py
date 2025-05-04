@@ -744,6 +744,10 @@ class ColPaliModel:
     def get_doc_ids_to_file_names(self):
         return self.doc_ids_to_file_names
         
+    def _base64_to_image(self, base64_str):
+        image_data = base64.b64decode(base64_str)
+        return Image.open(BytesIO(image_data))
+        
     def find_similar_images(self, query_image, top_k=5, batch_size=4):
         processed_query = self.processor.process_images([query_image])
         processed_query = {k: v.to(self.device) for k, v in processed_query.items()}
