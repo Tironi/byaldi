@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union, cast
 
 import srsly
 import torch
+import base64
 from colpali_engine.models import ColPali, ColPaliProcessor, ColQwen2, ColQwen2Processor, ColQwen2_5, ColQwen2_5_Processor
 from pdf2image import convert_from_path
 from PIL import Image
