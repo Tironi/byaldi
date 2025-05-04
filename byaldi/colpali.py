@@ -772,5 +772,5 @@ class ColPaliModel:
         return [{
             'similarity': similarity.item(),
             'page_index': idx,
-            'image_base64': self.collection.get(idx),
+            'image_base64': self.collection.get(int(idx)),
         } for similarity, idx in zip(top_k_values, top_k_indices)]
