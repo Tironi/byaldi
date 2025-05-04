@@ -772,7 +772,7 @@ class ColPaliModel:
 
         return [{
             'similarity': similarity.item(),
-            'doc_id': self.embed_id_to_doc_id[idx]["doc_id"],
-            'page_num': int(self.embed_id_to_doc_id[idx]["page_id"]),
+            'doc_id': self.embed_id_to_doc_id[int(idx)]["doc_id"],
+            'page_num': int(self.embed_id_to_doc_id[int(idx)]["page_id"]),
             'image_base64': self.collection.get(int(idx)),
         } for similarity, idx in zip(top_k_values, top_k_indices)]
