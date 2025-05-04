@@ -769,7 +769,7 @@ class ColPaliModel:
 
         similarities = torch.tensor(all_scores)
         top_k_values, top_k_indices = torch.topk(similarities, min(top_k, len(similarities)))
-        doc_info = self.embed_id_to_doc_id[adjusted_embed_id]
+
         return [{
             'similarity': similarity.item(),
             'doc_id': self.embed_id_to_doc_id[idx]["doc_id"],
