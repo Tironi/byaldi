@@ -743,3 +743,28 @@ class ColPaliModel:
 
     def get_doc_ids_to_file_names(self):
         return self.doc_ids_to_file_names
+        
+    def find_similar_images(self, query_image, top_k=5, batch_size=4):
+        processed_query = self.processor.process_images([query_image])
+        processed_query = {k: v.to(self.device) for k, v in processed_query.items()}
+
+        with torch.no_grad():
+            query_embedding = self.model(**processed_query)
+            query_embedding = query_embedding.to("cpu", dtype=torch.bfloat16)  # Ensure it is on the correct device and type
+
+
+        all_scores = []
+        req_embeddings = self.indexed_embeddings
+
+        for i in range(0, len(req_embeddings), batch_size):
+            batch_embeddings = req_embeddings[i:i + batch_size]
+            batch_scores = [torch.matmul(query_embedding, emb.t()).max(dim=-1)[0].sum().item() for emb in batch_embeddings]
+            all_scores.extend(batch_scores)
+
+        similarities = torch.tensor(all_scores)
+        top_k_values, top_k_indices = torch.topk(similarities, min(top_k, len(similarities)))
+
+        return [{
+            'similarity': similarity.item(),
+            'page_index': idx
+        } for similarity, idx in zip(top_k_values, top_k_indices)]
