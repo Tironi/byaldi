@@ -769,9 +769,10 @@ class ColPaliModel:
 
         similarities = torch.tensor(all_scores)
         top_k_values, top_k_indices = torch.topk(similarities, min(top_k, len(similarities)))
-
+        doc_info = self.embed_id_to_doc_id[adjusted_embed_id]
         return [{
             'similarity': similarity.item(),
-            'page_index': idx,
+            'doc_id': self.embed_id_to_doc_id[idx]["doc_id"],
+            'page_num': int(self.embed_id_to_doc_id[idx]["page_id"]),
             'image_base64': self.collection.get(int(idx)),
         } for similarity, idx in zip(top_k_values, top_k_indices)]
