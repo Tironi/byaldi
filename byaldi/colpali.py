@@ -351,7 +351,7 @@ class ColPaliModel:
             self.highest_doc_id = -1
 
         if input_path.is_dir():
-            items = list(input_path.iterdir())
+            items = list(sorted(input_path.iterdir()))
             if doc_ids is not None and len(doc_ids) != len(items):
                 raise ValueError(
                     f"Number of doc_ids ({len(doc_ids)}) does not match number of documents ({len(items)})"
