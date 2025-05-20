@@ -778,4 +778,4 @@ class ColPaliModel:
         } for similarity, idx in zip(top_k_values, top_k_indices)]
     
     def get_embeddings(self):
-        return indexed_embeddings
+        return self.indexed_embeddings
