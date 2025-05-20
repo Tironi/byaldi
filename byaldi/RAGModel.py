@@ -189,3 +189,6 @@ class RAGMultiModalModel:
 
     def find_similar_images(self, query_image, top_k=5, batch_size=4):
         return self.model.find_similar_images(query_image=query_image, top_k=top_k, batch_size=batch_size)
+
+    def get_embeddings(self):
+        return self.model.get_embeddings()
