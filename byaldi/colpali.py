@@ -104,7 +104,7 @@ class ColPaliModel:
         elif "colqwen2.5" in pretrained_model_name_or_path.lower():
             self.processor = cast(
                 ColQwen2_5_Processor,
-                ColQwen2_Processor.from_pretrained(
+                ColQwen2_5_Processor.from_pretrained(
                     self.pretrained_model_name_or_path,
                     token=kwargs.get("hf_token", None) or os.environ.get("HF_TOKEN"),
                 ),
