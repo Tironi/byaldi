@@ -45,8 +45,8 @@ class RAGMultiModalModel:
         index_root: str = ".byaldi",
         device: str = "cuda",
         index_name="",
-        skip = False,
         load_from_index=False,
+        skip = False,
         verbose: int = 1,
     ):
         """Load a ColPali model from a pre-trained checkpoint.
