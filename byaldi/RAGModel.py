@@ -65,6 +65,7 @@ class RAGMultiModalModel:
             index_name=index_name,
             device=device,
             load_from_index=load_from_index,
+            skip=skip,
             verbose=verbose,
         )
         return instance
