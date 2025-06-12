@@ -218,6 +218,7 @@ class ColPaliModel:
             verbose=verbose,
             load_from_index=load_from_index,
             index_root=index_root,
+            skip=skip,
             device=device,
             **kwargs,
         )
