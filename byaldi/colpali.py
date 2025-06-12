@@ -28,7 +28,7 @@ class ColPaliModel:
         verbose: int = 1,
         load_from_index: bool = False,
         index_root: str = ".byaldi",
-        skip: False,
+        skip: bool = False,
         device: Optional[Union[str, torch.device]] = None,
         **kwargs,
     ):
