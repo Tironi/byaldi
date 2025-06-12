@@ -749,6 +749,14 @@ class ColPaliModel:
     def _base64_to_image(self, base64_str):
         image_data = base64.b64decode(base64_str)
         return Image.open(BytesIO(image_data))
+
+    def get_embeddings_for_page(self, doc_id, page_id):
+        matched_embeddings = [
+            self.indexed_embeddings[embed_id]
+            for embed_id, meta in self.embed_id_to_doc_id.items()
+            if meta["doc_id"] == doc_id and meta["page_id"] == page_id
+        ]
+        return matched_embeddings
         
     def find_similar_images(self, query_image, top_k=5, batch_size=4):
         processed_query = self.processor.process_images([query_image])
