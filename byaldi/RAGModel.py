@@ -180,6 +180,9 @@ class RAGMultiModalModel:
         """
         return self.model.search(query, k, filter_metadata, return_base64_results)
 
+    def get_embeddings_for_page(self, doc_id, page_id):
+        return self.model.get_embeddings_for_page(doc_id=doc_id, page_id=page_id)
+        
     def get_doc_ids_to_file_names(self):
         return self.model.get_doc_ids_to_file_names()
 
