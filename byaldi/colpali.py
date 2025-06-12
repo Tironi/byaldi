@@ -116,7 +116,7 @@ class ColPaliModel:
             if device != "cuda" and not (
                 isinstance(device, torch.device) and device.type == "cuda"
             ):
-            self.model = self.model.to(device)
+                self.model = self.model.to(device)
 
         if not load_from_index:
             self.full_document_collection = False
