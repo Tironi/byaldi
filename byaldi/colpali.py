@@ -612,7 +612,7 @@ class ColPaliModel:
 
         return req_embeddings, req_embedding_ids
     
-    def search(
+    def similarity_pages(
         self,
         query: Union[str, List[str]],
         k: int = 10,
