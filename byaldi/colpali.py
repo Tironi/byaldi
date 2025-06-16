@@ -674,6 +674,30 @@ class ColPaliModel:
 
         return results[0] if isinstance(query, str) else results
 
+     def search(
+        self,
+        image1: Union[str, Image.Image, List[Union[str, Image.Image]]],
+        image2: Union[str, Image.Image, List[Union[str, Image.Image]]],
+    ) -> float:
+
+        batch = self.processor.process_images(image1)
+        batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+        image1_embeddings = self.model(**batch)
+
+        img1s = list(torch.unbind(image1_embeddings.to("cpu")))
+        
+        batch = self.processor.process_images(image2)
+        batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+        image2_embeddings = self.model(**batch)
+        
+        img2s = list(torch.unbind(image2_embeddings.to("cpu")))
+
+        scores = self.processor.score(img1s,img2s).cpu().numpy()
+        
+        top_pages = scores.argsort(axis=1)[0][-1:][::-1].tolist()
+
+        return float(scores[0][int(top_pages[0])])
+
     def encode_image(
         self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
     ) -> torch.Tensor:
