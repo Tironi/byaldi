@@ -612,7 +612,7 @@ class ColPaliModel:
 
         return req_embeddings, req_embedding_ids
     
-    def similarity_pages(
+    def search(
         self,
         query: Union[str, List[str]],
         k: int = 10,
@@ -674,7 +674,7 @@ class ColPaliModel:
 
         return results[0] if isinstance(query, str) else results
 
-     def search(
+     def similarity_pages(
         self,
         image1: Union[str, Image.Image, List[Union[str, Image.Image]]],
         image2: Union[str, Image.Image, List[Union[str, Image.Image]]],
