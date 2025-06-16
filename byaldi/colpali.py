@@ -652,7 +652,8 @@ class ColPaliModel:
                 req_embeddings = self.indexed_embeddings
             else:
                 req_embeddings, req_embedding_ids = self.filter_embeddings(filter_metadata=filter_metadata)
-    
+
+            print(req_embeddings)
             # Compute scores
             scores = self.processor.score(qs, req_embeddings).cpu().numpy()
     
