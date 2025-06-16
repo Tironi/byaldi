@@ -616,41 +616,49 @@ class ColPaliModel:
         self,
         query: Union[str, List[str]],
         k: int = 10,
-        filter_metadata: Optional[Dict[str,str]] = None,
+        filter_metadata: Optional[Dict[str, str]] = None,
         return_base64_results: Optional[bool] = None,
     ) -> Union[List[Result], List[List[Result]]]:
         # Set default value for return_base64_results if not provided
         if return_base64_results is None:
             return_base64_results = bool(self.collection)
-
+    
         valid_metadata_keys = list(self.doc_id_to_metadata.values())
         # Ensure k is not larger than the number of indexed documents
         k = min(k, len(self.indexed_embeddings))
-
+    
         # Process query/queries
         if isinstance(query, str):
             queries = [query]
         else:
             queries = query
-
+    
         results = []
         for q in queries:
             # Process query
             with torch.inference_mode():
                 batch_query = self.processor.process_queries([q])
-                batch_query = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch_query.items()}
+                batch_query = {
+                    k: v.to(self.device).to(
+                        self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype
+                    )
+                    for k, v in batch_query.items()
+                }
                 embeddings_query = self.model(**batch_query)
+    
             qs = list(torch.unbind(embeddings_query.to("cpu")))
+    
             if not filter_metadata:
                 req_embeddings = self.indexed_embeddings
             else:
-                req_embeddings, req_embedding_ids = self.filter_embeddings(filter_metadata=filter_metadata) 
+                req_embeddings, req_embedding_ids = self.filter_embeddings(filter_metadata=filter_metadata)
+    
             # Compute scores
-            scores = self.processor.score(qs,req_embeddings).cpu().numpy()
-
+            scores = self.processor.score(qs, req_embeddings).cpu().numpy()
+    
             # Get top k relevant pages
             top_pages = scores.argsort(axis=1)[0][-k:][::-1].tolist()
-
+    
             # Create Result objects
             query_results = []
             for embed_id in top_pages:
@@ -658,20 +666,19 @@ class ColPaliModel:
                     adjusted_embed_id = req_embedding_ids[embed_id]
                 else:
                     adjusted_embed_id = int(embed_id)
+    
                 doc_info = self.embed_id_to_doc_id[adjusted_embed_id]
                 result = Result(
                     doc_id=doc_info["doc_id"],
                     page_num=int(doc_info["page_id"]),
                     score=float(scores[0][int(embed_id)]),
                     metadata=self.doc_id_to_metadata.get(int(doc_info["doc_id"]), {}),
-                    base64=self.collection.get(adjusted_embed_id)
-                    if return_base64_results
-                    else None,
+                    base64=self.collection.get(adjusted_embed_id) if return_base64_results else None,
                 )
                 query_results.append(result)
-
+    
             results.append(query_results)
-
+    
         return results[0] if isinstance(query, str) else results
 
     def similarity_pages(
@@ -679,76 +686,81 @@ class ColPaliModel:
         image1: Union[str, Image.Image, List[Union[str, Image.Image]]],
         image2: Union[str, Image.Image, List[Union[str, Image.Image]]],
     ) -> float:
-
         batch = self.processor.process_images(image1)
-        batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+        batch = {
+            k: v.to(self.device).to(
+                self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype
+            )
+            for k, v in batch.items()
+        }
         image1_embeddings = self.model(**batch)
-
         img1s = list(torch.unbind(image1_embeddings.to("cpu")))
-        
+    
         batch = self.processor.process_images(image2)
-        batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+        batch = {
+            k: v.to(self.device).to(
+                self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype
+            )
+            for k, v in batch.items()
+        }
         image2_embeddings = self.model(**batch)
-        
         img2s = list(torch.unbind(image2_embeddings.to("cpu")))
-
-        scores = self.processor.score(img1s,img2s).cpu().numpy()
-        
+    
+        scores = self.processor.score(img1s, img2s).cpu().numpy()
         top_pages = scores.argsort(axis=1)[0][-1:][::-1].tolist()
-
+    
         return float(scores[0][int(top_pages[0])])
-
-    def encode_image(
-        self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
-    ) -> torch.Tensor:
-        """
-        Compute embeddings for one or more images, PDFs, folders, or image files.
-
-        Args:
-            input_data (Union[str, Image.Image, List[Union[str, Image.Image]]]):
-                A single image, PDF path, folder path, image file path, or a list of these.
-
-        Returns:
-            torch.Tensor: The computed embeddings for the input data.
-        """
-        if not isinstance(input_data, list):
-            input_data = [input_data]
-
-        images = []
-        for item in input_data:
-            if isinstance(item, Image.Image):
-                images.append(item)
-            elif isinstance(item, str):
-                if os.path.isdir(item):
-                    # Process folder
-                    for file in os.listdir(item):
-                        if file.lower().endswith(
-                            (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
-                        ):
-                            images.append(Image.open(os.path.join(item, file)))
-                elif item.lower().endswith(".pdf"):
-                    # Process PDF
-                    with tempfile.TemporaryDirectory() as path:
-                        pdf_images = convert_from_path(
-                            item, thread_count=os.cpu_count() - 1, output_folder=path
-                        )
-                        images.extend(pdf_images)
-                elif item.lower().endswith(
-                    (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
-                ):
-                    # Process image file
-                    images.append(Image.open(item))
+        def encode_image(
+            self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
+        ) -> torch.Tensor:
+            """
+            Compute embeddings for one or more images, PDFs, folders, or image files.
+    
+            Args:
+                input_data (Union[str, Image.Image, List[Union[str, Image.Image]]]):
+                    A single image, PDF path, folder path, image file path, or a list of these.
+    
+            Returns:
+                torch.Tensor: The computed embeddings for the input data.
+            """
+            if not isinstance(input_data, list):
+                input_data = [input_data]
+    
+            images = []
+            for item in input_data:
+                if isinstance(item, Image.Image):
+                    images.append(item)
+                elif isinstance(item, str):
+                    if os.path.isdir(item):
+                        # Process folder
+                        for file in os.listdir(item):
+                            if file.lower().endswith(
+                                (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
+                            ):
+                                images.append(Image.open(os.path.join(item, file)))
+                    elif item.lower().endswith(".pdf"):
+                        # Process PDF
+                        with tempfile.TemporaryDirectory() as path:
+                            pdf_images = convert_from_path(
+                                item, thread_count=os.cpu_count() - 1, output_folder=path
+                            )
+                            images.extend(pdf_images)
+                    elif item.lower().endswith(
+                        (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
+                    ):
+                        # Process image file
+                        images.append(Image.open(item))
+                    else:
+                        raise ValueError(f"Unsupported file type: {item}")
                 else:
-                    raise ValueError(f"Unsupported file type: {item}")
-            else:
-                raise ValueError(f"Unsupported input type: {type(item)}")
-
-        with torch.inference_mode():
-            batch = self.processor.process_images(images)
-            batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
-            embeddings = self.model(**batch)
-
-        return embeddings.cpu()
+                    raise ValueError(f"Unsupported input type: {type(item)}")
+    
+            with torch.inference_mode():
+                batch = self.processor.process_images(images)
+                batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+                embeddings = self.model(**batch)
+    
+            return embeddings.cpu()
 
     def encode_query(self, query: Union[str, List[str]]) -> torch.Tensor:
         """
