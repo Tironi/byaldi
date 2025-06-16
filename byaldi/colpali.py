@@ -678,7 +678,7 @@ class ColPaliModel:
         self,
         image1: Union[str, Image.Image, List[Union[str, Image.Image]]],
         image2: Union[str, Image.Image, List[Union[str, Image.Image]]],
-    ) -> float:
+     ) -> float:
 
         batch = self.processor.process_images(image1)
         batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
