@@ -667,6 +667,34 @@ class ColPaliModel:
 
         return results[0] if isinstance(query, str) else results
 
+    def similarity_pages(
+        self,
+        image1: Union[str, Image.Image, List[Union[str, Image.Image]]],
+        image2: Union[str, Image.Image, List[Union[str, Image.Image]]],
+    ) -> Union[List[Result], List[List[Result]]]:
+
+        results = []
+
+        with torch.inference_mode():
+            batch = self.processor.process_images(image1)
+            batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+            embeddings_img1 = self.model(**batch)
+
+        img1s = list(torch.unbind(embeddings_img1.to("cpu")))
+
+        with torch.inference_mode():
+            batch = self.processor.process_images(image2)
+            batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+            embeddings_img2 = self.model(**batch)
+        
+        img2s = list(torch.unbind(embeddings_img1.to("cpu")))
+            
+        scores = self.processor.avg(img1s,img2s).cpu().numpy()
+
+        top_pages = scores.argsort(axis=1)[0][-1:][::-1].tolist()
+
+        return float(scores[0][int(top_pages[0])])
+        
     def encode_image(
         self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
     ) -> torch.Tensor:
