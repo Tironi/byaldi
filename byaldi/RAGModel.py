@@ -185,7 +185,7 @@ class RAGMultiModalModel:
         image1,
         image2,
     ) -> float:
-        return self.model.similarity_pages(self, image1, image2)
+        return self.model.similarity_pages(image1, image2)
 
     def get_embeddings_for_page(self, doc_id, page_id):
         return self.model.get_embeddings_for_page(doc_id=doc_id, page_id=page_id)
