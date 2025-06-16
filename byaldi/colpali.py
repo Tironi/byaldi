@@ -711,57 +711,57 @@ class ColPaliModel:
     
         return float(scores[0][int(top_pages[0])])
         
-        def encode_image(
-            self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
-        ) -> torch.Tensor:
-            """
-            Compute embeddings for one or more images, PDFs, folders, or image files.
-    
-            Args:
-                input_data (Union[str, Image.Image, List[Union[str, Image.Image]]]):
-                    A single image, PDF path, folder path, image file path, or a list of these.
-    
-            Returns:
-                torch.Tensor: The computed embeddings for the input data.
-            """
-            if not isinstance(input_data, list):
-                input_data = [input_data]
-    
-            images = []
-            for item in input_data:
-                if isinstance(item, Image.Image):
-                    images.append(item)
-                elif isinstance(item, str):
-                    if os.path.isdir(item):
-                        # Process folder
-                        for file in os.listdir(item):
-                            if file.lower().endswith(
-                                (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
-                            ):
-                                images.append(Image.open(os.path.join(item, file)))
-                    elif item.lower().endswith(".pdf"):
-                        # Process PDF
-                        with tempfile.TemporaryDirectory() as path:
-                            pdf_images = convert_from_path(
-                                item, thread_count=os.cpu_count() - 1, output_folder=path
-                            )
-                            images.extend(pdf_images)
-                    elif item.lower().endswith(
-                        (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
-                    ):
-                        # Process image file
-                        images.append(Image.open(item))
-                    else:
-                        raise ValueError(f"Unsupported file type: {item}")
+    def encode_image(
+        self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
+    ) -> torch.Tensor:
+        """
+        Compute embeddings for one or more images, PDFs, folders, or image files.
+
+        Args:
+            input_data (Union[str, Image.Image, List[Union[str, Image.Image]]]):
+                A single image, PDF path, folder path, image file path, or a list of these.
+
+        Returns:
+            torch.Tensor: The computed embeddings for the input data.
+        """
+        if not isinstance(input_data, list):
+            input_data = [input_data]
+
+        images = []
+        for item in input_data:
+            if isinstance(item, Image.Image):
+                images.append(item)
+            elif isinstance(item, str):
+                if os.path.isdir(item):
+                    # Process folder
+                    for file in os.listdir(item):
+                        if file.lower().endswith(
+                            (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
+                        ):
+                            images.append(Image.open(os.path.join(item, file)))
+                elif item.lower().endswith(".pdf"):
+                    # Process PDF
+                    with tempfile.TemporaryDirectory() as path:
+                        pdf_images = convert_from_path(
+                            item, thread_count=os.cpu_count() - 1, output_folder=path
+                        )
+                        images.extend(pdf_images)
+                elif item.lower().endswith(
+                    (".png", ".jpg", ".jpeg", ".tiff", ".bmp", ".gif")
+                ):
+                    # Process image file
+                    images.append(Image.open(item))
                 else:
-                    raise ValueError(f"Unsupported input type: {type(item)}")
-    
-            with torch.inference_mode():
-                batch = self.processor.process_images(images)
-                batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
-                embeddings = self.model(**batch)
-    
-            return embeddings.cpu()
+                    raise ValueError(f"Unsupported file type: {item}")
+            else:
+                raise ValueError(f"Unsupported input type: {type(item)}")
+
+        with torch.inference_mode():
+            batch = self.processor.process_images(images)
+            batch = {k: v.to(self.device).to(self.model.dtype if v.dtype in [torch.float16, torch.bfloat16, torch.float32] else v.dtype) for k, v in batch.items()}
+            embeddings = self.model(**batch)
+
+        return embeddings.cpu()
 
     def encode_query(self, query: Union[str, List[str]]) -> torch.Tensor:
         """
