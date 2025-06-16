@@ -706,10 +706,11 @@ class ColPaliModel:
         image2_embeddings = self.model(**batch)
         img2s = list(torch.unbind(image2_embeddings.to("cpu")))
     
-        scores = self.processor.score(img1s, img2s).cpu().numpy()
+        scores = self.processor.avg(img1s, img2s).cpu().numpy()
         top_pages = scores.argsort(axis=1)[0][-1:][::-1].tolist()
     
         return float(scores[0][int(top_pages[0])])
+        
         def encode_image(
             self, input_data: Union[str, Image.Image, List[Union[str, Image.Image]]]
         ) -> torch.Tensor:
